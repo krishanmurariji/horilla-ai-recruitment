@@ -10,13 +10,6 @@
     .status-in_progress { border-left: 3.4px solid #f59e0b !important; border-radius: 4px 0 0 4px; }
     .status-completed { border-left: 3.4px solid #16a34a !important; border-radius: 4px 0 0 4px; }
 </style>
-{% if perms.vertex.add_trainingrecommendation %}
-<div class="oh-wrapper" style="padding-bottom:0;display:flex;justify-content:flex-end">
-    <button type="button" class="oh-btn oh-btn--light" hx-get="{% url 'vertex-training-suggest' %}" hx-target="#genericModalBody" data-toggle="oh-modal-toggle" data-target="#genericModal">
-        <ion-icon name="sparkles-outline" class="me-1"></ion-icon>{% trans "Suggest training" %}
-    </button>
-</div>
-{% endif %}
 <div hx-get="{% url 'vertex-training-nav' %}?{{request.GET.urlencode}}" hx-trigger="load"></div>
 <div class="oh-wrapper" id="listContainer">
     <div class="animated-background"></div>

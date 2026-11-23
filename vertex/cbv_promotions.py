@@ -283,6 +283,14 @@ class TrainingNavView(HorillaNavView):
         self.search_url = reverse("vertex-training-list")
         if access.training_employees(self.request.user).exists():
             self.create_attrs = _create_attrs("vertex-training-new")
+        if self.request.user.has_perm("vertex.add_trainingrecommendation"):
+            self.extra_buttons = (
+                '<button type="button" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-xs flex items-center gap-2 hover:bg-gray-100 transition duration-300 cursor-pointer" '
+                f'hx-get="{reverse("vertex-training-suggest")}" hx-target="#genericModalBody" '
+                'data-toggle="oh-modal-toggle" data-target="#genericModal">'
+                '<ion-icon name="sparkles-outline"></ion-icon>'
+                f'{_("Suggest training")}</button>'
+            )
 
 
 @method_decorator(login_required, name="dispatch")
