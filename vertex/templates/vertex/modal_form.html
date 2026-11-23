@@ -48,13 +48,14 @@
   .vm .select2-search--inline .select2-search__field { width: 100% !important; min-height: 28px !important; height: 28px; border: 0 !important; box-shadow: none !important; background: transparent !important; padding: 0 .25rem !important; margin: 0 !important; font-size: .86rem; }
   .vm textarea { min-height: 76px; resize: vertical; line-height: 1.5; }
   /* a locked field (for example the project code on edit) must look locked, not editable */
-  .vm input:disabled, .vm select:disabled, .vm textarea:disabled, .vm input[readonly],
+  .vm input[type=checkbox]:disabled { opacity: .6; cursor: not-allowed; }
+  .vm input:disabled:not([type=checkbox]), .vm select:disabled, .vm textarea:disabled, .vm input[readonly],
   .vm .select2-container--disabled .select2-selection {
     background: #eceef1 !important; color: #8b93a1 !important; -webkit-text-fill-color: #8b93a1;
     border-style: dashed !important; cursor: not-allowed !important; opacity: 1; box-shadow: none !important;
   }
   .vm .select2-container--disabled .select2-selection__rendered, .vm .select2-container--disabled .select2-selection__arrow { color: #8b93a1 !important; cursor: not-allowed !important; }
-  body.dark .vm input:disabled, body.dark .vm select:disabled, body.dark .vm textarea:disabled,
+  body.dark .vm input:disabled:not([type=checkbox]), body.dark .vm select:disabled, body.dark .vm textarea:disabled,
   body.dark .vm input[readonly], body.dark .vm .select2-container--disabled .select2-selection {
     background: #2a2f38 !important; color: #7d8594 !important; -webkit-text-fill-color: #7d8594;
   }
@@ -129,8 +130,25 @@
   </div>
 </div>
 
+{% if form.vm_toggle %}{{ form.vm_toggle|json_script:"vm-toggle-data" }}{% endif %}
 <script>
   $(document).ready(function () {
+    // vm_toggle = {"<switch field>": {"on": [fields shown when on], "off": [fields shown when off]}}
+    var holder = document.getElementById("vm-toggle-data");
+    if (holder) {
+      var rules = JSON.parse(holder.textContent);
+      Object.keys(rules).forEach(function (name) {
+        var box = document.getElementById("id_" + name);
+        if (!box) return;
+        var apply = function () {
+          var on = box.checked;
+          (rules[name].on || []).forEach(function (f) { $("#id_" + f + "_parent_div").toggle(on); });
+          (rules[name].off || []).forEach(function (f) { $("#id_" + f + "_parent_div").toggle(!on); });
+        };
+        box.addEventListener("change", apply);
+        apply();
+      });
+    }
     $(".vm select").on("select2:select", function () { this.dispatchEvent(new Event("change")); });
   });
 </script>

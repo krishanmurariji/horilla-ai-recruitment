@@ -2241,6 +2241,7 @@ class HorillaNavView(TemplateView):
     view_types: list = []
     create_attrs: str = """"""
     create_label: str = ""
+    extra_buttons: str = ""
     """
     Text of the create button; empty keeps "Create".
     """
@@ -2329,6 +2330,7 @@ class HorillaNavView(TemplateView):
         context["filter_body_template"] = self.filter_body_template
         context["create_attrs"] = self.create_attrs
         context["create_label"] = self.create_label
+        context["extra_buttons"] = self.extra_buttons
         context["search_in"] = self.search_in
         context["apply_first_filter"] = self.apply_first_filter
         context["filter_instance_context_name"] = self.filter_instance

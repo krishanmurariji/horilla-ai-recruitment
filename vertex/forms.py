@@ -128,6 +128,7 @@ class DocumentForm(ModelForm):
         labels = {"is_video_link": _("This is a video link"), "video_url": _("Video URL"), "file": _("File")}
 
     cols = {"title": 12, "description": 12, "file": 12, "video_url": 12}
+    vm_toggle = {"is_video_link": {"on": ["video_url"], "off": ["file"]}}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

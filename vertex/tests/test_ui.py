@@ -95,6 +95,19 @@ class VertexUiTests(VertexTestBase):
         for name in ("vertex-review-new", "vertex-minute-new"):
             self.assertNotContains(self.client_admin.get(reverse(name), **HX), "Save and add another")
 
+    def test_document_modal_switches_between_video_link_and_file(self):
+        page = self.client_admin.get(reverse("vertex-document-add", args=[self.project.pk]), **HX)
+        self.assertContains(page, 'id="vm-toggle-data"')
+        self.assertContains(page, "video_url")
+        # other modals have no toggle block
+        other = self.client_admin.get(reverse("vertex-project-new"), **HX)
+        self.assertNotContains(other, 'id="vm-toggle-data"')
+
+    def test_locked_switch_is_not_greyed_like_a_text_field(self):
+        page = self.client_admin.get(reverse("vertex-project-new"), **HX)
+        self.assertContains(page, "input:disabled:not([type=checkbox])")
+        self.assertContains(page, "input[type=checkbox]:disabled")
+
     def test_review_modal_has_the_meeting_section(self):
         page = self.client_admin.get(reverse("vertex-review-new"), **HX)
         self.assertContains(page, "Schedule a meeting (optional)")

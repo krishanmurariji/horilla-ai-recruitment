@@ -309,6 +309,17 @@ class PagesTests(PromotionBase):
             self.assertEqual(page.status_code, 200, url)
             self.assertNotContains(page, DENIED, msg_prefix=url)
 
+    def test_suggest_training_button_sits_in_the_nav_next_to_assign(self):
+        admin = make_employee("Admin2", "admin2@p.example", "9800000018")
+        user = admin.employee_user_id
+        user.is_superuser = True
+        user.save()
+        client = self.login(admin)
+        nav = client.get(reverse("vertex-training-nav"), **HX)
+        self.assertContains(nav, "Suggest training")
+        self.assertContains(nav, "Assign training")
+        self.assertNotContains(client.get(reverse("vertex-training")), "Suggest training")
+
     def test_my_performance_shows_a_completed_promotion_and_my_training(self):
         promotion = self.make()
         TrainingRecommendation.objects.create(employee=self.dev, skill_gap="Gap one", recommended_training="Course one")
