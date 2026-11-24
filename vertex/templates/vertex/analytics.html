@@ -85,15 +85,15 @@
       if (max) y.max = max;
       return { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: y, x: { ticks: { color: text } } } };
     }
-    function bar(id, labels, values, max) {
+    function bar(id, labels, values, max, palette) {
       var el = document.getElementById(id);
       if (!el) return;
-      new Chart(el, { type: "bar", data: { labels: labels, datasets: [{ data: values, backgroundColor: colours, borderRadius: 6 }] }, options: options(max) });
+      new Chart(el, { type: "bar", data: { labels: labels, datasets: [{ data: values, backgroundColor: palette || colours, borderRadius: 6 }] }, options: options(max) });
     }
-    bar("chartRatings", data.ratings.map(function (r) { return r.label; }), data.ratings.map(function (r) { return r.count; }));
+    bar("chartRatings", data.ratings.map(function (r) { return r.label; }), data.ratings.map(function (r) { return r.count; }), null, ["#16a34a", "#2563eb", "#d97706", "#dc2626"]);
     bar("chartPromotions", data.promotions.map(function (r) { return r.stage; }), data.promotions.map(function (r) { return r.count; }));
     bar("chartTraining", data.training_status.map(function (r) { return r.status; }), data.training_status.map(function (r) { return r.count; }));
-    bar("chartDepartments", data.departments.map(function (r) { return r.department; }), data.departments.map(function (r) { return r.rating; }), 5);
+    bar("chartDepartments", data.departments.map(function (r) { return r.department; }), data.departments.map(function (r) { return r.rating; }), 5, "#E54F38");
   })();
 </script>
 {% endblock content %}
