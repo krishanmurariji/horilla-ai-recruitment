@@ -1,0 +1,99 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block content %}
+{% include "vertex/_vx.html" %}
+<style>
+  .vx-charts { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
+  .vx-chartbox { position: relative; height: 260px; }
+  .vx-nine { display: grid; grid-template-columns: 5.5rem repeat(3, minmax(0, 1fr)); gap: .5rem; }
+  .vx-nine__head { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--vx-faint); display: flex; align-items: center; justify-content: center; text-align: center; }
+  .vx-nine__cell { border: 1px solid var(--vx-border); border-radius: 10px; padding: .55rem .65rem; min-height: 96px; background: var(--vx-subtle); }
+  .vx-nine__cell--top { background: var(--vx-primary-soft); }
+  .vx-nine__label { font-size: .72rem; font-weight: 700; color: var(--vx-muted); margin-bottom: .3rem; }
+  .vx-nine__person { font-size: .78rem; line-height: 1.5; }
+  .vx-nine__person small { color: var(--vx-muted); }
+  .vx-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  .vx-table th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--vx-faint); padding: .35rem .5rem; }
+  .vx-table td { padding: .4rem .5rem; border-top: 1px solid var(--vx-border); }
+  .vx-empty { color: var(--vx-muted); font-size: .85rem; margin: 0; }
+  @media (max-width: 720px) { .vx-nine { grid-template-columns: repeat(3, minmax(0, 1fr)); } .vx-nine__head { display: none; } }
+</style>
+<div class="oh-wrapper">
+<div class="vx-page">
+  <div class="vx-header">
+    <div>
+      <h1 class="vx-h1">{% trans "Talent analytics" %}</h1>
+      <p class="vx-sub">{% trans "Appraisals, ratings, promotions and training across the company." %}</p>
+    </div>
+    <div class="vx-actions">
+      <a class="oh-btn oh-btn--light" href="{% url 'vertex-overview' %}"><ion-icon name="arrow-back-outline" class="me-1"></ion-icon>{% trans "Overview" %}</a>
+      {% if can_export %}<a class="oh-btn oh-btn--secondary" href="{% url 'vertex-payroll-export' %}"><ion-icon name="download-outline" class="me-1"></ion-icon>{% trans "Payroll CSV (completed promotions)" %}</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="vx-stats">
+    <div class="vx-card vx-stat"><span class="vx-label">{% trans "Appraisals" %}</span><b>{{ report.completion.total }}</b></div>
+    <div class="vx-card vx-stat"><span class="vx-label">{% trans "Completed by manager" %}</span><b>{{ report.completion.completed }}</b></div>
+    <div class="vx-card vx-stat"><span class="vx-label">{% trans "Still pending" %}</span><b>{{ report.completion.pending }}</b></div>
+    <div class="vx-card vx-stat"><span class="vx-label">{% trans "Completion rate" %}</span><b>{{ report.completion.rate }}%</b></div>
+  </div>
+
+  <div class="vx-charts">
+    <div class="vx-card vx-card--pad"><h2 class="vx-section-title">{% trans "Rating distribution" %}</h2><div class="vx-chartbox"><canvas id="chartRatings"></canvas></div></div>
+    <div class="vx-card vx-card--pad"><h2 class="vx-section-title">{% trans "Average rating by department" %}</h2><div class="vx-chartbox"><canvas id="chartDepartments"></canvas></div>
+      {% if not report.departments %}<p class="vx-empty">{% trans "No rated appraisals yet." %}</p>{% endif %}</div>
+    <div class="vx-card vx-card--pad"><h2 class="vx-section-title">{% trans "Promotions by stage" %}</h2><div class="vx-chartbox"><canvas id="chartPromotions"></canvas></div></div>
+    <div class="vx-card vx-card--pad"><h2 class="vx-section-title">{% trans "Training by status" %}</h2><div class="vx-chartbox"><canvas id="chartTraining"></canvas></div></div>
+  </div>
+
+  <div class="vx-card vx-card--pad" style="margin-top:1rem">
+    <h2 class="vx-section-title">{% trans "Most common skill gaps" %}</h2>
+    {% if report.training.by_gap %}
+      <table class="vx-table"><thead><tr><th>{% trans "Skill gap" %}</th><th>{% trans "People" %}</th></tr></thead>
+      <tbody>{% for row in report.training.by_gap %}<tr><td>{{ row.gap }}</td><td>{{ row.count }}</td></tr>{% endfor %}</tbody></table>
+    {% else %}<p class="vx-empty">{% trans "No training has been recommended yet." %}</p>{% endif %}
+  </div>
+
+  <div class="vx-card vx-card--pad" style="margin-top:1rem">
+    <h2 class="vx-section-title">{% trans "9-box talent matrix" %} &middot; {{ report.nine_box.count }}</h2>
+    <p class="vx-sub" style="margin-bottom:.8rem">{% trans "Each person's latest final rating (up) against the average progress of their goals (across)." %}</p>
+    <div class="vx-nine">
+      <div></div>
+      {% for band in report.nine_box.delivery_bands %}<div class="vx-nine__head">{{ band }} {% trans "delivery" %}</div>{% endfor %}
+      {% for row in report.nine_box.grid %}
+        <div class="vx-nine__head">{{ row.performance }} {% trans "performance" %}</div>
+        {% for cell in row.cells %}
+          <div class="vx-nine__cell{% if forloop.parentloop.first and forloop.last %} vx-nine__cell--top{% endif %}">
+            <div class="vx-nine__label">{{ cell.label }}{% if cell.people %} &middot; {{ cell.people|length }}{% endif %}</div>
+            {% for person in cell.people %}<div class="vx-nine__person">{{ person.name }} <small>{{ person.rating }} &middot; {{ person.progress }}%</small></div>{% endfor %}
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+</div>
+{{ chart_data|json_script:"vx-chart-data" }}
+<script>
+  (function () {
+    if (!window.Chart) return;
+    var data = JSON.parse(document.getElementById("vx-chart-data").textContent);
+    var colours = ["#E54F38", "#2563eb", "#16a34a", "#d97706", "#8b5cf6", "#6b7280"];
+    var text = getComputedStyle(document.body).color;
+    function options(max) {
+      var y = { beginAtZero: true, ticks: { precision: 0, color: text } };
+      if (max) y.max = max;
+      return { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: y, x: { ticks: { color: text } } } };
+    }
+    function bar(id, labels, values, max) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      new Chart(el, { type: "bar", data: { labels: labels, datasets: [{ data: values, backgroundColor: colours, borderRadius: 6 }] }, options: options(max) });
+    }
+    bar("chartRatings", data.ratings.map(function (r) { return r.label; }), data.ratings.map(function (r) { return r.count; }));
+    bar("chartPromotions", data.promotions.map(function (r) { return r.stage; }), data.promotions.map(function (r) { return r.count; }));
+    bar("chartTraining", data.training_status.map(function (r) { return r.status; }), data.training_status.map(function (r) { return r.count; }));
+    bar("chartDepartments", data.departments.map(function (r) { return r.department; }), data.departments.map(function (r) { return r.rating; }), 5);
+  })();
+</script>
+{% endblock content %}

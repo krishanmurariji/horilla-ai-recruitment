@@ -3,7 +3,6 @@ vertex/urls.py
 """
 
 from django.urls import path
-from django.views.generic import RedirectView
 
 from vertex import (
     cbv,
@@ -13,6 +12,7 @@ from vertex import (
     cbv_promotions,
     views,
     views_appraisals,
+    views_dashboard,
     views_expenses,
     views_minutes,
     views_performance,
@@ -22,7 +22,10 @@ from vertex import (
 )
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="vertex-projects"), name="vertex-home"),
+    path("", views_dashboard.home, name="vertex-home"),
+    path("overview/", views_dashboard.overview, name="vertex-overview"),
+    path("talent-analytics/", views_dashboard.talent_analytics, name="vertex-analytics"),
+    path("talent-analytics/payroll.csv", views_dashboard.payroll_export, name="vertex-payroll-export"),
     path("projects/", cbv.ProjectsView.as_view(), name="vertex-projects"),
     path("projects/nav/", cbv.ProjectsNavView.as_view(), name="vertex-project-nav"),
     path("projects/list/", cbv.ProjectsList.as_view(), name="vertex-project-list"),

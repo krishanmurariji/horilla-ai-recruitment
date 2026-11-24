@@ -75,6 +75,8 @@ BREADCRUMB_URL_NAMES = {
     "expenses": "Expenses",
     "expense-settings": "Expense Settings",
     "my-performance": "My Performance",
+    "overview": "Overview",
+    "talent-analytics": "Talent Analytics",
 }
 
 sidebar_urls = [
@@ -96,6 +98,8 @@ sidebar_urls = [
     "expenses",
     "expense-settings",
     "my-performance",
+    "overview",
+    "talent-analytics",
     "dashboard",
     "ess",
     "pipeline",

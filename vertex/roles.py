@@ -10,7 +10,7 @@ Admin (superuser) needs none of this and passes every check.
 """
 
 # permission codenames of the vertex app, grouped by what they allow
-PROJECTS_VIEW = ["view_project"]
+PROJECTS_VIEW = ["view_project", "view_vertexdashboard"]
 PROJECTS_MANAGE = ["add_project", "change_project", "add_projectmember", "delete_projectmember",
                    "add_projectdocument", "delete_projectdocument", "add_projectcall"]
 PROJECTS_ALL = ["view_allprojects", "change_allprojects"]
@@ -36,6 +36,7 @@ ROLES = {
         "view_trainingrecommendation", "add_trainingrecommendation", "change_trainingrecommendation",
         "delete_trainingrecommendation", "view_alltraining",
         "view_expense", "view_allexpenses", "view_expensesetting",
+        "view_talentanalytics", "view_payrollexport",
     ],
     "Vertex - Project Manager": [
         *PROJECTS_VIEW, "change_project", "add_projectmember", "delete_projectmember",
@@ -76,6 +77,7 @@ ROLES = {
         "view_appraisalcycle", "view_appraisal", "view_allappraisals", "view_goal", "view_allgoals",
         "view_promotion", "view_allpromotions", "view_trainingrecommendation", "view_alltraining",
         "view_expense", "view_allexpenses",
+        "view_talentanalytics",
     ],
     "Vertex - Leadership Approver": [
         *PROJECTS_VIEW, "view_allprojects", "view_statusupdate", "view_resourcevisibility",
@@ -83,6 +85,7 @@ ROLES = {
         "view_promotion", "view_allpromotions", "change_promotionapproval",
         "view_trainingrecommendation", "view_alltraining",
         "view_expense", "view_allexpenses",
+        "view_talentanalytics", "view_payrollexport",
     ],
     # finance: approves and sees every expense, and can read the expense settings
     "Vertex - Accountant": [

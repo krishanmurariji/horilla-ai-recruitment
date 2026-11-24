@@ -13,6 +13,11 @@ IMG_SRC = "images/ui/grid.svg"
 
 SUBMENUS = [
     {
+        "menu": _("Overview"),
+        "redirect": reverse("vertex-overview"),
+        "accessibility": "vertex.sidebar.overview_accessibility",
+    },
+    {
         "menu": _("Projects"),
         "redirect": reverse("vertex-projects"),
         "accessibility": "vertex.sidebar.projects_accessibility",
@@ -93,6 +98,11 @@ SUBMENUS = [
         "accessibility": "vertex.sidebar.expense_settings_accessibility",
     },
     {
+        "menu": _("Talent Analytics"),
+        "redirect": reverse("vertex-analytics"),
+        "accessibility": "vertex.sidebar.analytics_accessibility",
+    },
+    {
         "menu": _("My Performance"),
         "redirect": reverse("vertex-my-performance"),
         "accessibility": "vertex.sidebar.my_performance_accessibility",
@@ -166,3 +176,11 @@ def expenses_accessibility(request, submenu, user_perms, *args, **kwargs):
 
 def expense_settings_accessibility(request, submenu, user_perms, *args, **kwargs):
     return request.user.has_perm("vertex.view_expensesetting")
+
+
+def overview_accessibility(request, submenu, user_perms, *args, **kwargs):
+    return request.user.has_perm("vertex.view_vertexdashboard")
+
+
+def analytics_accessibility(request, submenu, user_perms, *args, **kwargs):
+    return request.user.has_perm("vertex.view_talentanalytics")

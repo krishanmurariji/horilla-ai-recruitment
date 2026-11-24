@@ -1792,3 +1792,35 @@ class ExpenseSetting(models.Model):
     def current(cls):
         setting, _created = cls.objects.get_or_create(pk=1)
         return setting
+
+
+# ---------------------------------------------------------------------------
+# Dashboard and talent analytics: permission switches only
+# ---------------------------------------------------------------------------
+
+
+class VertexDashboard(Project):
+    """Permission switch only: ``view_vertexdashboard`` opens the Vertex overview page."""
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Vertex dashboard")
+        verbose_name_plural = _("Vertex dashboard")
+
+
+class TalentAnalytics(Appraisal):
+    """Permission switch only: ``view_talentanalytics`` opens the analytics page (HR and leadership)."""
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Talent analytics")
+        verbose_name_plural = _("Talent analytics")
+
+
+class PayrollExport(Promotion):
+    """Permission switch only: ``view_payrollexport`` downloads the CSV of completed promotions."""
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Payroll export")
+        verbose_name_plural = _("Payroll export")
