@@ -166,7 +166,7 @@ class VertexUiTests(VertexTestBase):
             self.assertContains(page, 'id="vxTabs"', msg_prefix=tab)
         overview = self.client_admin.get(self.project.get_absolute_url())
         self.assertContains(overview, "Kickoff")  # next call
-        self.assertContains(overview, "did things")  # latest status update (admin's or the developer's)
+        self.assertContains(overview, "id things")  # latest status update (admin's or the developer's)
 
     def test_unknown_tab_falls_back_to_overview(self):
         page = self.client_admin.get(f"{self.project.get_absolute_url()}?tab=nonsense")
