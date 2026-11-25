@@ -36,7 +36,7 @@ class ExpenseError(Exception):
 
 
 def _locked(expense_id, expected):
-    expense = Expense.objects.select_for_update().select_related("raised_by").get(pk=expense_id)
+    expense = Expense.objects.select_for_update(of=("self",)).select_related("raised_by").get(pk=expense_id)
     if expense.status not in expected:
         raise ExpenseError(
             _t("This expense is now '%(status)s', so that step is no longer possible.")

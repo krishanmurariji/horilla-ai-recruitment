@@ -19,7 +19,9 @@ class VertexConfig(AppConfig):
         from django.urls import include, path
 
         from horilla.urls import urlpatterns
-        from vertex import scheduler  # noqa: F401  starts the background jobs
+        from vertex import audit, scheduler  # noqa: F401  scheduler starts the background jobs
+
+        audit.register_all()
 
         settings.APPS.append("vertex")
         urlpatterns.append(path("vertex/", include("vertex.urls")))

@@ -22,7 +22,14 @@ from decimal import Decimal
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils.html import conditional_escape
 from django.utils.translation import gettext_lazy as _
+
+
+def _person(employee, missing="-"):
+    """A person's name for a table cell. Lists print what a ``get_*`` method returns as trusted HTML,
+    so the name is escaped here: a name with markup in it must show as text, never run."""
+    return conditional_escape(employee.get_full_name()) if employee else missing
 
 
 class ProjectStatus(models.TextChoices):
@@ -396,13 +403,13 @@ class ReviewRequest(models.Model):
         return self.project.get_absolute_url()
 
     def get_project_code(self):
-        return self.project.code
+        return conditional_escape(self.project.code)
 
     def get_subject_name(self):
-        return self.subject.get_full_name()
+        return _person(self.subject)
 
     def get_reviewer_name(self):
-        return self.assigned_to.get_full_name() if self.assigned_to else "-"
+        return _person(self.assigned_to)
 
     def get_meeting_time(self):
         meeting = getattr(self, "meeting", None)
@@ -528,8 +535,9 @@ class MeetingMinute(models.Model):
     raw_notes = models.TextField(blank=True, default="")
     minutes_text = models.TextField(blank=True, default="")
     status = models.CharField(max_length=10, choices=MinuteStatus.choices, default=MinuteStatus.DRAFT)
+    # the minutes outlive the person who wrote them
     created_by = models.ForeignKey(
-        "employee.Employee", on_delete=models.CASCADE, related_name="vertex_minutes"
+        "employee.Employee", null=True, on_delete=models.SET_NULL, related_name="vertex_minutes"
     )
     approved_by = models.ForeignKey(
         "employee.Employee", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
@@ -650,7 +658,7 @@ class StatusUpdate(models.Model):
         )
 
     def get_project_code(self):
-        return self.project.code
+        return conditional_escape(self.project.code)
 
     def get_project_url(self):
         return self.project.get_absolute_url()
@@ -729,10 +737,10 @@ class ResourceRequest(models.Model):
         return self.project.get_absolute_url()
 
     def get_project_code(self):
-        return self.project.code
+        return conditional_escape(self.project.code)
 
     def get_requested_by_name(self):
-        return self.requested_by.get_full_name() if self.requested_by else "-"
+        return _person(self.requested_by)
 
     def get_raised_on(self):
         return _when(self.created_at)
@@ -828,8 +836,9 @@ class Feedback(models.Model):
     subject = models.ForeignKey(
         "employee.Employee", on_delete=models.CASCADE, related_name="vertex_feedback_about"
     )
+    # the feedback is a record about the subject: it outlives the person who wrote it
     author = models.ForeignKey(
-        "employee.Employee", on_delete=models.CASCADE, related_name="vertex_feedback_written"
+        "employee.Employee", null=True, on_delete=models.SET_NULL, related_name="vertex_feedback_written"
     )
     project = models.ForeignKey(
         Project, null=True, blank=True, on_delete=models.SET_NULL, related_name="feedback"
@@ -879,13 +888,13 @@ class Feedback(models.Model):
         return f"onclick=\"window.location.href='{self.get_absolute_url()}'\""
 
     def get_subject_name(self):
-        return self.subject.get_full_name()
+        return _person(self.subject)
 
     def get_author_name(self):
-        return self.author.get_full_name()
+        return _person(self.author, _("Former employee"))
 
     def get_project_code(self):
-        return self.project.code if self.project else "-"
+        return conditional_escape(self.project.code) if self.project else "-"
 
     def get_status_html(self):
         colour = {
@@ -995,7 +1004,7 @@ class PerformanceReport(models.Model):
         return f"onclick=\"window.location.href='{self.get_absolute_url()}'\""
 
     def get_subject_name(self):
-        return self.subject.get_full_name()
+        return _person(self.subject)
 
     def get_score_display(self):
         return f"{self.overall_score}%"
@@ -1100,7 +1109,7 @@ class Pip(models.Model):
         return reverse("vertex-pip-edit", args=[self.pk])
 
     def get_subject_name(self):
-        return self.subject.get_full_name()
+        return _person(self.subject)
 
     def get_source_display(self):
         return _("Automatic") if self.is_auto else _("Manual")
@@ -1273,13 +1282,13 @@ class Appraisal(models.Model):
         return reverse("vertex-appraisal-release", args=[self.pk])
 
     def get_employee_name(self):
-        return self.employee.get_full_name()
+        return _person(self.employee)
 
     def get_manager_name(self):
-        return self.manager.get_full_name() if self.manager_id else "-"
+        return _person(self.manager)
 
     def get_cycle_name(self):
-        return self.cycle.name
+        return conditional_escape(self.cycle.name)
 
     def get_self_rating_display(self):
         return f"{self.self_rating} / 5" if self.self_rating is not None else "-"
@@ -1368,10 +1377,10 @@ class Goal(models.Model):
         return reverse("vertex-goal-delete", args=[self.pk])
 
     def get_employee_name(self):
-        return self.employee.get_full_name()
+        return _person(self.employee)
 
     def get_cycle_name(self):
-        return self.cycle.name if self.cycle_id else "-"
+        return conditional_escape(self.cycle.name) if self.cycle_id else "-"
 
     def get_weight_display(self):
         return f"{self.weightage}%"
@@ -1466,13 +1475,13 @@ class Promotion(models.Model):
         return reverse("vertex-promotion", args=[self.pk])
 
     def get_employee_name(self):
-        return self.employee.get_full_name()
+        return _person(self.employee)
 
     def get_recommender_name(self):
-        return self.recommended_by.get_full_name() if self.recommended_by_id else "-"
+        return _person(self.recommended_by)
 
     def get_designation_display(self):
-        return f"{self.current_designation or '-'} -> {self.proposed_position.job_position}"
+        return conditional_escape(f"{self.current_designation or '-'} -> {self.proposed_position.job_position}")
 
     def get_stage_html(self):
         colour = {
@@ -1598,7 +1607,7 @@ class TrainingRecommendation(models.Model):
         return reverse("vertex-training-delete", args=[self.pk])
 
     def get_employee_name(self):
-        return self.employee.get_full_name()
+        return _person(self.employee)
 
     def get_duration_display(self):
         return _("%(n)s month(s)") % {"n": self.duration_months}
@@ -1684,8 +1693,9 @@ class Expense(models.Model):
     invoice_size = models.BigIntegerField(default=0)
     status = models.CharField(max_length=20, choices=ExpenseStatus.choices, default=ExpenseStatus.PAYMENT_REQUESTED)
     approval_required = models.BooleanField(default=True)
+    # a payment record must outlive the person who raised it
     raised_by = models.ForeignKey(
-        "employee.Employee", on_delete=models.CASCADE, related_name="vertex_expenses_raised"
+        "employee.Employee", null=True, on_delete=models.SET_NULL, related_name="vertex_expenses_raised"
     )
     approver = models.ForeignKey(
         "employee.Employee", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
@@ -1712,7 +1722,7 @@ class Expense(models.Model):
         return reverse("vertex-expense", args=[self.pk])
 
     def get_raiser_name(self):
-        return self.raised_by.get_full_name()
+        return _person(self.raised_by, _("Former employee"))
 
     def get_amount_display(self):
         return f"₹{self.amount:,.2f}"
@@ -1792,3 +1802,44 @@ class ExpenseSetting(models.Model):
     def current(cls):
         setting, _created = cls.objects.get_or_create(pk=1)
         return setting
+
+
+# ---------------------------------------------------------------------------
+# Dashboard and talent analytics: permission switches only
+# ---------------------------------------------------------------------------
+
+
+class VertexDashboard(Project):
+    """Permission switch only: ``view_vertexdashboard`` opens the Vertex overview page."""
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Vertex dashboard")
+        verbose_name_plural = _("Vertex dashboard")
+
+
+class TalentAnalytics(Appraisal):
+    """Permission switch only: ``view_talentanalytics`` opens the analytics page (HR and leadership)."""
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Talent analytics")
+        verbose_name_plural = _("Talent analytics")
+
+
+class PayrollExport(Promotion):
+    """Permission switch only: ``view_payrollexport`` downloads the CSV of completed promotions."""
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Payroll export")
+        verbose_name_plural = _("Payroll export")
+
+
+class ManagementReport(Project):
+    """Permission switch only: ``view_managementreport`` opens the Reports page and its printable version."""
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Management report")
+        verbose_name_plural = _("Management report")

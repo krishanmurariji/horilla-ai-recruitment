@@ -1,0 +1,81 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block content %}
+{% include "vertex/_vx.html" %}
+<style>
+  .vx-dash { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items: start; }
+  .vx-stat--alert { border-left-color: var(--vx-bad); }
+  .vx-stat--small b { font-size: 1.05rem; line-height: 1.5; margin-top: .45rem; }
+  a.vx-stat { text-decoration: none; color: var(--vx-text); }
+  a.vx-stat:hover { border-color: var(--vx-primary); }
+  .vx-stat small { color: var(--vx-muted); font-size: .74rem; }
+  .vx-count-pill { background: var(--vx-primary-soft); color: var(--vx-primary-ink); border-radius: 999px; font-weight: 700; font-size: .8rem; padding: .1rem .65rem; }
+  .vx-split { display: flex; flex-direction: column; gap: .55rem; }
+  .vx-split__row { display: flex; align-items: center; gap: .6rem; font-size: .82rem; }
+  .vx-split__row > span:first-child { width: 6.5rem; color: var(--vx-muted); }
+  .vx-split__row .vx-meter { flex: 1; }
+  .vx-split__row b { width: 2rem; text-align: right; }
+  .vx-empty { color: var(--vx-muted); font-size: .85rem; margin: 0; }
+</style>
+<div class="oh-wrapper">
+<div class="vx-page">
+  <div class="vx-header">
+    <div>
+      <h1 class="vx-h1">{% trans "Overview" %}</h1>
+      <p class="vx-sub">{% trans "Your numbers, what is waiting on you and how the projects you can see are doing." %}</p>
+    </div>
+    {% if can_analytics %}<a class="oh-btn oh-btn--light" href="{% url 'vertex-analytics' %}"><ion-icon name="stats-chart-outline" class="me-1"></ion-icon>{% trans "Talent analytics" %}</a>{% endif %}
+  </div>
+
+  {% if cards %}
+  <div class="vx-stats">
+    {% for card in cards %}
+      <a class="vx-card vx-stat{% if card.alert %} vx-stat--alert{% endif %}{% if card.small %} vx-stat--small{% endif %}" href="{{ card.url }}">
+        <span class="vx-label"><ion-icon name="{{ card.icon }}" style="vertical-align:-2px"></ion-icon> {{ card.label }}</span>
+        <b>{{ card.value }}</b>
+        {% if card.hint %}<small>{{ card.hint }}</small>{% endif %}
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="vx-dash">
+    <div class="vx-card vx-card--pad">
+      <h2 class="vx-section-title">{% trans "Waiting on you" %}</h2>
+      {% for row in pending %}
+        <a class="vx-item" href="{{ row.url }}"><div class="vx-item__body"><div class="vx-item__title">{{ row.label }}</div></div><span class="vx-count-pill">{{ row.count }}</span></a>
+      {% empty %}
+        <p class="vx-empty">{% trans "Nothing is waiting on you." %}</p>
+      {% endfor %}
+    </div>
+
+    {% if health %}
+    <div class="vx-card vx-card--pad">
+      <h2 class="vx-section-title">{% trans "Project health" %} &middot; {{ health.total }}</h2>
+      {% if health.total %}
+        <div class="vx-label">{% trans "By status" %}</div>
+        <div class="vx-split" style="margin-bottom:1rem">
+          {% for row in health.status %}<div class="vx-split__row"><span>{{ row.label }}</span><div class="vx-meter"><span style="width:{% widthratio row.count health.total 100 %}%;background:var(--vx-info)"></span></div><b>{{ row.count }}</b></div>{% endfor %}
+        </div>
+        <div class="vx-label">{% trans "By health" %}</div>
+        <div class="vx-split">
+          {% for row in health.health %}<div class="vx-split__row"><span>{{ row.label }}</span><div class="vx-meter"><span style="width:{% widthratio row.count health.total 100 %}%;background:{% if row.value == 'green' %}var(--vx-ok){% elif row.value == 'amber' %}var(--vx-warn){% else %}var(--vx-bad){% endif %}"></span></div><b>{{ row.count }}</b></div>{% endfor %}
+        </div>
+      {% else %}
+        <p class="vx-empty">{% trans "No projects yet." %}</p>
+      {% endif %}
+    </div>
+
+    <div class="vx-card vx-card--pad">
+      <h2 class="vx-section-title">{% trans "Upcoming calls" %}</h2>
+      {% for call in calls %}
+        <a class="vx-item" href="{{ call.project.get_absolute_url }}?tab=calls"><div class="vx-item__body"><div class="vx-item__title">{{ call.title }}</div><div class="vx-item__sub">{{ call.project.name }} &middot; {{ call.scheduled_at|date:"j M, H:i" }}</div></div></a>
+      {% empty %}
+        <p class="vx-empty">{% trans "No calls are scheduled." %}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+</div>
+{% endblock content %}

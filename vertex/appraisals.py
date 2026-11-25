@@ -34,7 +34,8 @@ def activate_cycle(cycle, by=None):
         created.append(
             Appraisal(cycle=cycle, employee=employee, manager=manager, stage=AppraisalStage.SELF_PENDING)
         )
-    Appraisal.objects.bulk_create(created)
+    for appraisal in created:
+        appraisal.save()  # one by one: bulk_create skips the audit trail
     cycle.status = CycleStatus.ACTIVE
     cycle.save(update_fields=["status"])
     notify_employees(

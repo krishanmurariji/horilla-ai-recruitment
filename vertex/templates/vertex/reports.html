@@ -1,0 +1,77 @@
+{% extends "index.html" %}
+{% load i18n %}
+{% block content %}
+{% include "vertex/_vx.html" %}
+<style>
+  .vx-two { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
+  .vx-chartbox { position: relative; height: 260px; }
+  .vx-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  .vx-table th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--vx-faint); padding: .4rem .6rem; }
+  .vx-table td { padding: .5rem .6rem; border-top: 1px solid var(--vx-border); }
+  .vx-bucket { display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--vx-border); border-radius: 10px; padding: .6rem .9rem; margin-bottom: .5rem; }
+  .vx-bucket b { font-size: 1.15rem; }
+  .vx-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: .4rem; }
+  .vx-empty { color: var(--vx-muted); font-size: .85rem; margin: 0; }
+</style>
+<div class="oh-wrapper">
+<div class="vx-page">
+  <div class="vx-header">
+    <div>
+      <h1 class="vx-h1">{% trans "Reports" %}</h1>
+      <p class="vx-sub">{% trans "Management reporting across the projects you can open." %}</p>
+    </div>
+    <div class="vx-actions">
+      <a class="oh-btn oh-btn--secondary" href="{% url 'vertex-reports-print' %}" target="_blank" rel="noopener"><ion-icon name="print-outline" class="me-1"></ion-icon>{% trans "Print / PDF" %}</a>
+      <a class="oh-btn oh-btn--light" href="{% url 'vertex-reports-csv' %}"><ion-icon name="download-outline" class="me-1"></ion-icon>{% trans "Export CSV" %}</a>
+    </div>
+  </div>
+
+  <div class="vx-stats">
+    <div class="vx-card vx-stat"><span class="vx-label">{% trans "Projects" %}</span><b>{{ kpis.projects }}</b></div>
+    <div class="vx-card vx-stat"><span class="vx-label">{% trans "Active" %}</span><b>{{ kpis.active }}</b></div>
+    <div class="vx-card vx-stat"><span class="vx-label">{% trans "At risk" %}</span><b>{{ kpis.at_risk }}</b></div>
+    <div class="vx-card vx-stat"><span class="vx-label">{% trans "Assignments" %}</span><b>{{ kpis.assignments }}</b></div>
+  </div>
+
+  <div class="vx-two">
+    <div class="vx-card vx-card--pad">
+      <h2 class="vx-section-title">{% trans "Team size by project" %}</h2>
+      {% if projects %}<div class="vx-chartbox"><canvas id="chartTeams"></canvas></div>{% else %}<p class="vx-empty">{% trans "No projects yet." %}</p>{% endif %}
+    </div>
+    {% if buckets %}
+    <div class="vx-card vx-card--pad">
+      <h2 class="vx-section-title">{% trans "Resource availability" %}</h2>
+      {% for b in buckets %}<div class="vx-bucket"><span>{{ b.name }}</span><b>{{ b.count }}</b></div>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="vx-card vx-card--pad" style="margin-top:1rem">
+    <h2 class="vx-section-title">{% trans "Project register" %}</h2>
+    <div style="overflow-x:auto">
+    <table class="vx-table">
+      <thead><tr><th>{% trans "Code" %}</th><th>{% trans "Project" %}</th><th>{% trans "Client" %}</th><th>{% trans "Status" %}</th><th>{% trans "Health" %}</th><th>{% trans "Team" %}</th></tr></thead>
+      <tbody>
+        {% for row in projects %}
+          <tr><td><b>{{ row.project.code }}</b></td><td><a href="{{ row.project.get_absolute_url }}">{{ row.project.name }}</a></td><td>{{ row.project.client_name|default:"-" }}</td><td>{{ row.project.get_status_display }}</td>
+            <td><span class="vx-dot" style="background:{% if row.project.health == 'green' %}var(--vx-ok){% elif row.project.health == 'amber' %}var(--vx-warn){% else %}var(--vx-bad){% endif %}"></span>{{ row.project.get_health_display }}</td><td>{{ row.members }}</td></tr>
+        {% empty %}<tr><td colspan="6" class="vx-empty">{% trans "No projects yet." %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+</div>
+{{ chart|json_script:"vx-teams-data" }}
+<script>
+  (function () {
+    var el = document.getElementById("chartTeams");
+    if (!el || !window.Chart) return;
+    var data = JSON.parse(document.getElementById("vx-teams-data").textContent);
+    var text = getComputedStyle(document.body).color;
+    new Chart(el, { type: "bar", data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: "#2563eb", borderRadius: 6 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0, color: text } }, x: { ticks: { color: text } } } } });
+  })();
+</script>
+{% endblock content %}

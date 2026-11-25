@@ -58,7 +58,7 @@
         <div class="vx-item vx-item--block" style="margin-bottom:.7rem">
           <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.4rem">
             <div style="font-weight:600">{{ f.period }}{% if f.project %} &middot; {{ f.project }}{% endif %}</div>
-            <div class="vx-item__sub">{% trans "From" %} {{ f.author.get_full_name }} &middot; {{ f.published_at|date:"j M Y" }}</div>
+            <div class="vx-item__sub">{% trans "From" %} {{ f.get_author_name }} &middot; {{ f.published_at|date:"j M Y" }}</div>
           </div>
           <p class="vx-text">{{ f.constructive_summary }}</p>
           {% if f.strengths %}<div class="vx-label" style="margin-top:.6rem">{% trans "Strengths" %}</div><p class="vx-text">{{ f.strengths }}</p>{% endif %}
