@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from horilla.decorators import login_required, permission_required
 from horilla.methods import handle_no_permission
 from horilla.post_only import post_only
-from vertex import access, expenses
+from vertex import access, audit, expenses
 from vertex.models import ExpenseSetting, ExpenseStatus
 
 
@@ -50,6 +50,7 @@ def expense_download(request, pk):
         raise Http404
     response = FileResponse(expense.invoice.open("rb"), as_attachment=True, filename=expense.invoice_name or "invoice")
     response["X-Content-Type-Options"] = "nosniff"
+    audit.log_access(expense, "downloaded the invoice")
     return response
 
 

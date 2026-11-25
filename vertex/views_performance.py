@@ -228,6 +228,18 @@ def performance_report(request, pk):
 
 
 @login_required
+@permission_required("vertex.view_performancereport")
+def performance_report_print(request, pk):
+    """The same report as a printable page: open it, then "Save as PDF" in the browser."""
+    report = _report_or_404(request, pk)
+    return render(
+        request,
+        "vertex/performance_report_print.html",
+        {"report": report, "rows": performance.category_rows(report)},
+    )
+
+
+@login_required
 @permission_required("vertex.change_performancepublication")
 @post_only
 def performance_report_publish(request, pk):

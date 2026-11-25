@@ -14,7 +14,7 @@
           <img class="vx-avatar" style="width:52px;height:52px" src="{{ feedback.subject.get_avatar }}" alt="">
           <div style="min-width:0">
             <h1 class="vx-title">{{ feedback.subject.get_full_name }}</h1>
-            <div class="vx-meta">{% trans "Feedback for" %} {{ feedback.period }}{% if feedback.project %} &middot; <a href="{{ feedback.project.get_absolute_url }}">{{ feedback.project }}</a>{% endif %} &middot; {% trans "written by" %} {{ feedback.author.get_full_name }}</div>
+            <div class="vx-meta">{% trans "Feedback for" %} {{ feedback.period }}{% if feedback.project %} &middot; <a href="{{ feedback.project.get_absolute_url }}">{{ feedback.project }}</a>{% endif %} &middot; {% trans "written by" %} {{ feedback.get_author_name }}</div>
           </div>
         </div>
         <div class="vx-actions">

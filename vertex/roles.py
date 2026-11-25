@@ -36,7 +36,7 @@ ROLES = {
         "view_trainingrecommendation", "add_trainingrecommendation", "change_trainingrecommendation",
         "delete_trainingrecommendation", "view_alltraining",
         "view_expense", "view_allexpenses", "view_expensesetting",
-        "view_talentanalytics", "view_payrollexport",
+        "view_talentanalytics", "view_payrollexport", "view_managementreport",
     ],
     "Vertex - Project Manager": [
         *PROJECTS_VIEW, "change_project", "add_projectmember", "delete_projectmember",
@@ -52,6 +52,7 @@ ROLES = {
         "view_promotion", "add_promotion",
         "view_trainingrecommendation", "add_trainingrecommendation", "change_trainingrecommendation",
         "delete_trainingrecommendation",
+        "view_managementreport",
     ],
     "Vertex - Technical Lead": [
         *PROJECTS_VIEW, "add_projectdocument",
@@ -77,7 +78,7 @@ ROLES = {
         "view_appraisalcycle", "view_appraisal", "view_allappraisals", "view_goal", "view_allgoals",
         "view_promotion", "view_allpromotions", "view_trainingrecommendation", "view_alltraining",
         "view_expense", "view_allexpenses",
-        "view_talentanalytics",
+        "view_talentanalytics", "view_managementreport",
     ],
     "Vertex - Leadership Approver": [
         *PROJECTS_VIEW, "view_allprojects", "view_statusupdate", "view_resourcevisibility",
@@ -85,7 +86,7 @@ ROLES = {
         "view_promotion", "view_allpromotions", "change_promotionapproval",
         "view_trainingrecommendation", "view_alltraining",
         "view_expense", "view_allexpenses",
-        "view_talentanalytics", "view_payrollexport",
+        "view_talentanalytics", "view_payrollexport", "view_managementreport",
     ],
     # finance: approves and sees every expense, and can read the expense settings
     "Vertex - Accountant": [

@@ -49,7 +49,7 @@
 
     <div class="vx-card vx-card--pad">
       <h2 class="vx-section-title">{% trans "History" %}</h2>
-      <div class="vx-item vx-item--block" style="margin-bottom:.6rem"><div style="font-weight:600">{% trans "Raised" %}</div><div class="vx-item__sub">{{ expense.raised_by.get_full_name }} &middot; {{ expense.created_at|date:"j M Y, H:i" }}</div></div>
+      <div class="vx-item vx-item--block" style="margin-bottom:.6rem"><div style="font-weight:600">{% trans "Raised" %}</div><div class="vx-item__sub">{{ expense.get_raiser_name }} &middot; {{ expense.created_at|date:"j M Y, H:i" }}</div></div>
       {% if expense.decided_at %}
         <div class="vx-item vx-item--block" style="margin-bottom:.6rem">
           <div style="font-weight:600">{% if rejected %}{% trans "Rejected" %}{% else %}{% trans "Approved" %}{% endif %}</div>

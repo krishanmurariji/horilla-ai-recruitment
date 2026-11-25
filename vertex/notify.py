@@ -16,15 +16,16 @@ logger = logging.getLogger(__name__)
 
 
 def notify_employees(sender, recipients, verb, redirect="", icon="people-outline"):
-    """Bell notification to each employee (``sender`` is an Employee)."""
+    """Bell notification to each employee (``sender`` is an Employee; None for an automatic job's reminder)."""
     sent = 0
     for employee in {e.pk: e for e in recipients if e is not None}.values():
         user = getattr(employee, "employee_user_id", None)
-        if user is None or employee == sender:
+        if user is None or (sender is not None and employee == sender):
             continue
         try:
+            # a notification needs someone it is "from": a job's reminder comes from the person it reminds
             notify.send(
-                sender, recipient=user, verb=verb, icon=icon, redirect=redirect or "/"
+                sender or employee, recipient=user, verb=verb, icon=icon, redirect=redirect or "/"
             )
             sent += 1
         except Exception:

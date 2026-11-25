@@ -16,7 +16,7 @@ from django.utils.translation import gettext_lazy as _
 from horilla.decorators import login_required, permission_required
 from horilla.methods import handle_no_permission
 from horilla.post_only import post_only
-from vertex import access, meetings
+from vertex import access, audit, meetings
 from vertex.forms import CommentForm
 from vertex.models import ProjectMember, ProjectRole
 
@@ -171,6 +171,7 @@ def document_download(request, pk, doc_id):
         filename=document.file_name or document.file.name.rsplit("/", 1)[-1],
     )
     response["X-Content-Type-Options"] = "nosniff"
+    audit.log_access(document, "downloaded the file")
     return response
 
 

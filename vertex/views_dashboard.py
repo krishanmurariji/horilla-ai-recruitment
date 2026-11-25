@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from horilla.decorators import login_required, permission_required
-from vertex import analytics, dashboard
+from vertex import access, analytics, audit, dashboard
 
 
 @login_required
@@ -51,7 +51,11 @@ def talent_analytics(request):
 @permission_required("vertex.view_payrollexport")
 def payroll_export(request):
     filename = f"payroll-revisions-{timezone.localdate().isoformat()}.csv"
-    response = HttpResponse(analytics.payroll_csv(), content_type="text/csv; charset=utf-8")
+    content = analytics.payroll_csv()
+    me = access.employee_of(request.user)
+    if me is not None:  # the salary figures are the most sensitive thing Vertex hands out: record who took them
+        audit.log_access(me, f"downloaded the payroll CSV ({max(content.count(chr(10)) - 1, 0)} rows)")
+    response = HttpResponse(content, content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     response["X-Content-Type-Options"] = "nosniff"
     return response

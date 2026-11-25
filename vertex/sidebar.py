@@ -103,6 +103,16 @@ SUBMENUS = [
         "accessibility": "vertex.sidebar.analytics_accessibility",
     },
     {
+        "menu": _("Reports"),
+        "redirect": reverse("vertex-reports"),
+        "accessibility": "vertex.sidebar.reports_accessibility",
+    },
+    {
+        "menu": _("Notifications"),
+        "redirect": reverse("vertex-notifications"),
+        "accessibility": "vertex.sidebar.notifications_accessibility",
+    },
+    {
         "menu": _("My Performance"),
         "redirect": reverse("vertex-my-performance"),
         "accessibility": "vertex.sidebar.my_performance_accessibility",
@@ -184,3 +194,13 @@ def overview_accessibility(request, submenu, user_perms, *args, **kwargs):
 
 def analytics_accessibility(request, submenu, user_perms, *args, **kwargs):
     return request.user.has_perm("vertex.view_talentanalytics")
+
+
+def notifications_accessibility(request, submenu, user_perms, *args, **kwargs):
+    from vertex import access
+
+    return access.has_vertex_access(request.user)
+
+
+def reports_accessibility(request, submenu, user_perms, *args, **kwargs):
+    return request.user.has_perm("vertex.view_managementreport")

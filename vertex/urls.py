@@ -13,10 +13,12 @@ from vertex import (
     views,
     views_appraisals,
     views_dashboard,
+    views_notifications,
     views_expenses,
     views_minutes,
     views_performance,
     views_promotions,
+    views_reports,
     views_resources,
     views_reviews,
 )
@@ -25,6 +27,12 @@ urlpatterns = [
     path("", views_dashboard.home, name="vertex-home"),
     path("overview/", views_dashboard.overview, name="vertex-overview"),
     path("talent-analytics/", views_dashboard.talent_analytics, name="vertex-analytics"),
+    path("reports/", views_reports.reports, name="vertex-reports"),
+    path("reports/print/", views_reports.reports_print, name="vertex-reports-print"),
+    path("reports/projects.csv", views_reports.reports_csv, name="vertex-reports-csv"),
+    path("notifications/", views_notifications.notification_centre, name="vertex-notifications"),
+    path("notifications/read-all/", views_notifications.notifications_read_all, name="vertex-notifications-read-all"),
+    path("notifications/<int:pk>/open/", views_notifications.notification_open, name="vertex-notification-open"),
     path("talent-analytics/payroll.csv", views_dashboard.payroll_export, name="vertex-payroll-export"),
     path("projects/", cbv.ProjectsView.as_view(), name="vertex-projects"),
     path("projects/nav/", cbv.ProjectsNavView.as_view(), name="vertex-project-nav"),
@@ -171,4 +179,5 @@ urlpatterns = [
     path("expense-settings/send/<str:kind>/", views_expenses.expense_summary_now, name="vertex-expense-summary-now"),
     # the employee's own view
     path("my-performance/", views_performance.my_performance, name="vertex-my-performance"),
+    path("performance-reports/<int:pk>/print/", views_performance.performance_report_print, name="vertex-performance-report-print"),
 ]
