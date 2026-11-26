@@ -189,7 +189,7 @@ def send_summary(kind):
         sender = Employee.objects.filter(employee_user_id__is_superuser=True, is_active=True).first()
         if sender is not None:  # a bell notification needs someone to come from
             notify_employees(sender, list(internal), f"{title}: {message}", reverse("vertex-expenses"), icon="wallet-outline")
-        result["emailed"] = send_plain_email(emails, title, body)
+        result["emailed"] = send_plain_email(emails, title, body, tag=_t("Expense summary"))
     if setting.teams_webhook_url:
         try:
             _post_teams(setting.teams_webhook_url, title, body)

@@ -413,5 +413,5 @@ def evaluate_and_trigger_pip(subject, score, period, actor):
     notify_employees(actor, recipients, f"{subject_line}. {pip.reason}", reverse("vertex-pip"), icon="alert-circle-outline")
     emails = [e.email for e in recipients if e.email]
     if emails:
-        send_plain_email(emails, subject_line, pip.reason)
+        send_plain_email(emails, subject_line, pip.reason, tag=_("Improvement plan"))
     return pip
