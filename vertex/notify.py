@@ -24,8 +24,9 @@ def notify_employees(sender, recipients, verb, redirect="", icon="people-outline
             continue
         try:
             # a notification needs someone it is "from": a job's reminder comes from the person it reminds
+            extra = {} if sender is not None else {"label": "Ariel Vertex"}  # shown instead of "by <the person themselves>"
             notify.send(
-                sender or employee, recipient=user, verb=verb, icon=icon, redirect=redirect or "/"
+                sender or employee, recipient=user, verb=verb, icon=icon, redirect=redirect or "/", **extra
             )
             sent += 1
         except Exception:

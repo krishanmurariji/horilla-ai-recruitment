@@ -47,14 +47,12 @@
                 <br>
                 <p class="text-xs text-[#777777] mt-1">
                     {{ notification.timesince }} ago by
-                    {% if notification.actor.employee_first_name %}
+                    {% if notification.data.label %}
+                        {{ notification.data.label }}
+                    {% elif notification.actor.employee_first_name %}
                         {{ notification.actor.get_full_name }}
                     {% else %}
-                        {% if notification.data.label %}
-                            {{ notification.data.label }}
-                        {% else %}
-                            {% trans "Anonymous" %}
-                        {% endif %}
+                        {% trans "Anonymous" %}
                     {% endif %}
                 </p>
             </li>

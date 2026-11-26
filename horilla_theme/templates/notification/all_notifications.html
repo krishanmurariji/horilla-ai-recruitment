@@ -42,7 +42,7 @@
             <p class="text-xs text-[#777777] mt-1 flex">
                 {{ notification.timesince }} {% trans "ago by " %}
                 <b>
-                    {{ notification.actor.get_full_name }}</b>
+                    {% if notification.data.label %}{{ notification.data.label }}{% else %}{{ notification.actor.get_full_name }}{% endif %}</b>
             </p>
         </div>
     {% endfor %}
