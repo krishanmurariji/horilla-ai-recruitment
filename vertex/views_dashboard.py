@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from horilla.decorators import login_required, permission_required
 from vertex import access, analytics, audit, dashboard
+from vertex.notify_rules import RULES
 
 
 @login_required
@@ -26,6 +27,7 @@ def home(request):
 def overview(request):
     context = dashboard.dashboard_for(request.user)
     context["can_analytics"] = request.user.has_perm("vertex.view_talentanalytics")
+    context["rules"] = RULES
     return render(request, "vertex/dashboard.html", context)
 
 

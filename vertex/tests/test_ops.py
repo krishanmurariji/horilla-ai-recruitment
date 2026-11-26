@@ -331,79 +331,59 @@ class MonthlyReportTests(JobsBase):
 # ---------------------------------------------------------------------------
 
 
-class NotificationCentreTests(JobsBase):
+class CommonNotificationTests(JobsBase):
+    """Vertex alerts live in Ariel HR's own bell and inbox: one notification centre for everything."""
+
     def send(self, person, text, link="/vertex/expenses/"):
         notify_employees(self.admin, [person], text, link)
         return Notification.objects.filter(recipient=person.employee_user_id).latest("pk")
 
-    def test_it_lists_only_my_vertex_notifications(self):
-        mine = self.send(self.dev, "Vertex one")
-        self.send(self.dev, "Not Vertex", link="/employee/somewhere/")
-        self.send(self.qa, "Someone else's")
-        rows = self.login(self.dev).get(reverse("vertex-notifications")).context["rows"]
-        self.assertEqual([r["id"] for r in rows], [mine.pk])
-        self.assertEqual(rows[0]["text"], "Vertex one")
+    def test_a_vertex_alert_appears_in_the_bell_and_opens_the_vertex_page(self):
+        self.send(self.dev, "Your goal changed", "/vertex/goals/")
+        bell = self.login(self.dev).get(reverse("notifications"))
+        self.assertContains(bell, "Your goal changed")
+        self.assertContains(bell, 'href="/vertex/goals/#"')
+        everything = self.login(self.dev).get(reverse("all-notifications"))
+        self.assertContains(everything, "Your goal changed")
 
-    def test_the_unread_filter_and_the_count(self):
-        first = self.send(self.dev, "Old one")
-        first.mark_as_read()
-        self.send(self.dev, "New one")
-        page = self.login(self.dev).get(reverse("vertex-notifications") + "?filter=unread")
-        self.assertEqual([r["text"] for r in page.context["rows"]], ["New one"])
-        self.assertEqual(page.context["unread_total"], 1)
-        self.assertEqual(len(self.login(self.dev).get(reverse("vertex-notifications")).context["rows"]), 2)
+    def test_an_automatic_reminder_is_from_ariel_vertex_not_from_the_person_it_is_for(self):
+        jobs.status_reminders(date(2027, 3, 1))
+        note = Notification.objects.filter(recipient=self.dev.employee_user_id).latest("pk")
+        self.assertEqual(note.data["label"], "Ariel Vertex")
+        for url in ("notifications", "all-notifications"):
+            page = self.login(self.dev).get(reverse(url))
+            self.assertContains(page, "You have not sent today", msg_prefix=url)
+            self.assertContains(page, "Ariel Vertex", msg_prefix=url)
+            flat = " ".join(page.content.decode().split())
+            self.assertNotIn(f"ago by {self.dev.get_full_name()}", flat, url)
 
-    def test_opening_one_marks_it_read_and_goes_to_the_item(self):
-        note = self.send(self.dev, "Open me", link="/vertex/goals/")
-        response = self.login(self.dev).post(reverse("vertex-notification-open", args=[note.pk]))
-        self.assertRedirects(response, "/vertex/goals/", fetch_redirect_response=False)
+    def test_an_alert_caused_by_a_person_still_names_that_person(self):
+        self.send(self.dev, "A human did this")
+        page = self.login(self.dev).get(reverse("notifications"))
+        self.assertContains(page, self.admin.get_full_name())
+        self.assertNotContains(page, "Ariel Vertex")
+
+    def test_opening_it_from_the_bell_marks_it_read_for_everything(self):
+        note = self.send(self.dev, "Mark me")
+        from notifications.utils import id2slug
+
+        self.login(self.dev).get(reverse("notifications:mark_as_read", args=[id2slug(note.pk)]))
         note.refresh_from_db()
         self.assertFalse(note.unread)
 
-    def test_nobody_can_open_or_read_someone_elses(self):
-        note = self.send(self.dev, "Private")
-        grant(self.qa, "view_project")
-        response = self.login(self.qa).post(reverse("vertex-notification-open", args=[note.pk]))
-        self.assertEqual(response.status_code, 404)
-        note.refresh_from_db()
-        self.assertTrue(note.unread)
+    def test_the_separate_vertex_notification_page_is_gone(self):
+        from django.urls import NoReverseMatch
 
-    def test_mark_all_read_only_touches_my_vertex_ones(self):
-        mine = self.send(self.dev, "A")
-        self.send(self.dev, "B")
-        other_app = self.send(self.dev, "Elsewhere", link="/employee/x/")
-        theirs = self.send(self.qa, "Theirs")
-        self.login(self.dev).post(reverse("vertex-notifications-read-all"))
-        mine.refresh_from_db(); other_app.refresh_from_db(); theirs.refresh_from_db()
-        self.assertFalse(mine.unread)
-        self.assertTrue(other_app.unread)
-        self.assertTrue(theirs.unread)
+        for name in ("vertex-notifications", "vertex-notifications-read-all"):
+            with self.assertRaises(NoReverseMatch):
+                reverse(name)
+        self.assertEqual(self.login(self.dev).get("/vertex/notifications/").status_code, 404)
 
-    def test_the_actions_need_a_post(self):
-        note = self.send(self.dev, "A")
-        client = self.login(self.dev)
-        self.assertEqual(client.get(reverse("vertex-notification-open", args=[note.pk])).status_code, 405)
-        self.assertEqual(client.get(reverse("vertex-notifications-read-all")).status_code, 405)
-        note.refresh_from_db()
-        self.assertTrue(note.unread)
-
-    def test_a_link_outside_the_site_is_never_followed(self):
-        from vertex.views_notifications import safe_link
-
-        for bad in ("https://evil.example/", "//evil.example", "javascript:alert(1)", "\\\\evil", "", None):
-            self.assertEqual(safe_link(bad), "/vertex/", bad)
-        self.assertEqual(safe_link("/vertex/goals/?x=1"), "/vertex/goals/?x=1")
-
-    def test_someone_with_no_vertex_permission_is_turned_away(self):
-        self.assertEqual(self.login(self.nobody).get(reverse("vertex-notifications")).status_code, 302)
-        self.assertContains(self.login(self.nobody).get(reverse("vertex-notifications"), **HX), DENIED)
-
-    def test_the_rules_are_listed_and_an_automatic_reminder_is_delivered(self):
-        jobs.status_reminders(date(2027, 3, 1))
-        page = self.login(self.dev).get(reverse("vertex-notifications"))
-        self.assertContains(page, "Who gets notified, and when")
+    def test_the_overview_lists_which_events_send_a_notification(self):
+        page = self.login(self.dev).get(reverse("vertex-overview"))
+        self.assertContains(page, "Which Vertex events send you a notification")
         self.assertContains(page, str(notify_rules.RULES[0][1]))
-        self.assertContains(page, "You have not sent today")
+        self.assertContains(page, "at the top right")
 
 
 # ---------------------------------------------------------------------------

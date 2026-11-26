@@ -25,13 +25,6 @@ def employee_of(user):
     return getattr(user, "employee_get", None)
 
 
-def has_vertex_access(user):
-    """Anyone who holds at least one Vertex permission (admin included) may use the Vertex notification centre."""
-    return bool(
-        user.is_superuser or any(perm.startswith("vertex.") for perm in user.get_all_permissions())
-    )
-
-
 def sees_all_projects(user):
     return user.has_perm("vertex.view_allprojects")
 

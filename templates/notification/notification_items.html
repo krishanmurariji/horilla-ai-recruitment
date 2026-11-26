@@ -67,14 +67,12 @@
                         {% endif %}
                         <span class="oh-navbar__notification-date">
                             {{ notification.timesince }} {% trans "ago by" %}
-                            {% if notification.actor.employee_first_name %}
+                            {% if notification.data.label %}
+                                {{notification.data.label}}
+                            {% elif notification.actor.employee_first_name %}
                                 {{ notification.actor.employee_first_name }}
                             {% else %}
-                                {% if notification.data.label %}
-                                    {{notification.data.label}}
-                                {% else %}
-                                    {% trans "Anonymous"%}
-                                {% endif %}
+                                {% trans "Anonymous"%}
                             {% endif %}
                         </span>
                     </div>

@@ -16,6 +16,11 @@
   .vx-split__row .vx-meter { flex: 1; }
   .vx-split__row b { width: 2rem; text-align: right; }
   .vx-empty { color: var(--vx-muted); font-size: .85rem; margin: 0; }
+  .vx-rules { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  .vx-rules th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--vx-faint); padding: .4rem .6rem; }
+  .vx-rules td { padding: .45rem .6rem; border-top: 1px solid var(--vx-border); vertical-align: top; }
+  .vx-rules td:first-child { color: var(--vx-muted); white-space: nowrap; }
+  details.vx-card summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
 </style>
 <div class="oh-wrapper">
 <div class="vx-page">
@@ -76,6 +81,15 @@
     </div>
     {% endif %}
   </div>
+
+  <details class="vx-card vx-card--pad" style="margin-top:1rem">
+    <summary>{% trans "Which Vertex events send you a notification" %}</summary>
+    <p class="vx-sub" style="margin:.5rem 0 .6rem">{% trans "They arrive in the bell at the top right, together with the rest of Ariel HR." %}</p>
+    <table class="vx-rules">
+      <thead><tr><th>{% trans "Area" %}</th><th>{% trans "When" %}</th><th>{% trans "Who is told" %}</th></tr></thead>
+      <tbody>{% for area, event, who in rules %}<tr><td>{{ area }}</td><td>{{ event }}</td><td>{{ who }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </details>
 </div>
 </div>
 {% endblock content %}
