@@ -7,7 +7,6 @@ a notification or mail problem never breaks the action that caused it.
 
 import logging
 
-from django.core.mail import EmailMultiAlternatives
 from django.utils.html import escape
 
 from notifications.signals import notify
@@ -34,19 +33,55 @@ def notify_employees(sender, recipients, verb, redirect="", icon="people-outline
     return sent
 
 
-def send_plain_email(emails, subject, body):
-    """Mail ``body`` (shown pre-formatted) to each address; returns how many went out."""
+PARAGRAPH_STYLE = "margin:0 0 16px;font-size:14px;color:#444444;line-height:1.7;"
+
+
+def text_to_html(text):
+    """Plain text as letterhead paragraphs: a blank line starts a paragraph, a new line is a line break, and
+    nothing typed can become markup."""
+    normal = (text or "").replace(chr(13) + chr(10), chr(10))
+    paragraphs = [p for p in normal.split(chr(10) * 2) if p.strip()]
+    return "".join(
+        f'<p style="{PARAGRAPH_STYLE}">{escape(paragraph.strip()).replace(chr(10), "<br>")}</p>' for paragraph in paragraphs
+    )
+
+
+MAIL_TEMPLATE = "vertex/mail/letterhead.html"
+
+
+def build_mail(subject, body, email, tag="", team="Ariel Vertex", sender=None):
+    """One Vertex mail on Ariel HR's company letterhead (the same one payslips and leave mails use): logo,
+    watermark, a small tag at the top right and the team signature in the footer."""
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+
+    from base.mail_letterhead import attach_letterhead_images, letterhead_context, resolve_letterhead_company
+
+    company = resolve_letterhead_company()
+    has_logo = bool(company and company.icon)
+    context = letterhead_context(
+        company, tag_label=tag, team_label=team, has_logo=has_logo, has_watermark=has_logo, content=text_to_html(body)
+    )
+    message = EmailMultiAlternatives(subject, body, sender, [email])
+    message.attach_alternative(render_to_string(MAIL_TEMPLATE, context), "text/html")
+    attached_logo, attached_watermark = attach_letterhead_images(message, company)
+    if (attached_logo, attached_watermark) != (has_logo, has_logo):
+        # the logo file could not be attached: draw the page without it rather than with a broken image
+        context.update(has_logo=attached_logo, has_watermark=attached_watermark)
+        message.alternatives = [(render_to_string(MAIL_TEMPLATE, context), "text/html")]
+    return message
+
+
+def send_plain_email(emails, subject, body, tag="", team="Ariel Vertex"):
+    """Mail ``body`` to each address on the company letterhead; returns how many went out.
+    ``tag`` is the small label at the top right."""
     from base.backends import ConfiguredEmailBackend
 
-    backend = ConfiguredEmailBackend()
-    sender = backend.dynamic_from_email_with_display_name
-    html = f'<pre style="font-family:inherit;white-space:pre-wrap">{escape(body)}</pre>'
+    sender = ConfiguredEmailBackend().dynamic_from_email_with_display_name
     sent = 0
     for email in emails:
         try:
-            message = EmailMultiAlternatives(subject, body, sender, [email])
-            message.attach_alternative(html, "text/html")
-            message.send()
+            build_mail(subject, body, email, tag=tag, team=team, sender=sender).send()
             sent += 1
         except Exception:
             logger.exception("Vertex mail to %s failed", email)

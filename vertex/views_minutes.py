@@ -106,7 +106,7 @@ def minutes_send(request, pk):
         me = access.employee_of(request.user)
         internal = Employee.objects.filter(email__in=emails, is_active=True)
         notify_employees(me, internal, subject, "/vertex/minutes/")
-        emailed = send_plain_email(emails, subject, body)
+        emailed = send_plain_email(emails, subject, body, tag=_("Meeting minutes"))
         minute.status = MinuteStatus.SENT
         minute.sent_at = timezone.now()
         minute.sent_count += 1

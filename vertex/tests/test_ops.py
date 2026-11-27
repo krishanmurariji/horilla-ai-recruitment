@@ -457,3 +457,75 @@ class ReportTests(OpsBase):
         report = performance.generate_report(self.dev, PerformancePeriodType.MONTHLY, "2027-01")
         page = self.login(self.hr).get(report.get_absolute_url())
         self.assertContains(page, reverse("vertex-performance-report-print", args=[report.pk]))
+
+
+# ---------------------------------------------------------------------------
+# Mail on the company letterhead
+# ---------------------------------------------------------------------------
+
+
+class MailTests(OpsBase):
+    def sent(self):
+        from django.core import mail
+
+        return mail.outbox
+
+    def test_a_vertex_mail_wears_the_company_letterhead_like_every_other_ariel_mail(self):
+        from vertex.notify import send_plain_email
+
+        self.assertEqual(send_plain_email(["a@example.com"], "Minutes of meeting", "Hello\n\nSecond part", tag="Meeting minutes"), 1)
+        message = self.sent()[0]
+        html = message.alternatives[0][0]
+        self.assertEqual(message.subject, "Minutes of meeting")
+        self.assertEqual(message.body, "Hello\n\nSecond part")  # the plain-text version stays as written
+        self.assertIn("cid:letterhead_gradient", html)  # the same header band Ariel's own mails carry
+        self.assertIn("Meeting minutes", html)  # the tag at the top right
+        self.assertIn("Ariel Vertex", html)  # the signature in the footer
+        self.assertIn("This is an automated message", html)
+        self.assertNotIn("<pre", html)
+        self.assertTrue(message.attachments, "the letterhead images are attached")
+
+    def test_paragraphs_and_line_breaks_are_kept(self):
+        from vertex.notify import text_to_html
+
+        html = text_to_html("one\n\ntwo\nthree\r\n\r\nfour")
+        self.assertEqual(html.count("<p "), 3)
+        self.assertIn("two<br>three", html)
+        self.assertEqual(text_to_html(""), "")
+
+    def test_what_was_typed_can_never_become_markup(self):
+        from vertex.notify import send_plain_email
+
+        send_plain_email(["a@example.com"], "Subject", '<script>alert(1)</script> & "quoted"')
+        html = self.sent()[0].alternatives[0][0]
+        self.assertNotIn("<script>alert(1)", html)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", html)
+
+    def test_one_address_failing_does_not_stop_the_others(self):
+        from django.core.mail import EmailMultiAlternatives
+
+        from vertex.notify import send_plain_email
+
+        calls = {"n": 0}
+        real = EmailMultiAlternatives.send
+
+        def flaky(self, *args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise OSError("smtp down")
+            return real(self, *args, **kwargs)
+
+        with mock.patch.object(EmailMultiAlternatives, "send", flaky):
+            self.assertEqual(send_plain_email(["bad@example.com", "good@example.com"], "S", "B"), 1)
+        self.assertEqual([m.to for m in self.sent()], [["good@example.com"]])
+
+    def test_the_expense_summary_and_the_improvement_plan_use_it_too(self):
+        from vertex import expenses
+
+        setting = ExpenseSetting.current()
+        setting.daily_recipients = "boss@example.com"
+        setting.save()
+        expenses.send_summary("daily")
+        html = self.sent()[-1].alternatives[0][0]
+        self.assertIn("Expense summary", html)
+        self.assertIn("cid:letterhead_gradient", html)
